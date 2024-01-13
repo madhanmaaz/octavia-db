@@ -4,7 +4,7 @@ const crypto = require('crypto')
 
 
 class OctaviaDB {
-    constructor({ databaseName, databasePassword }) {
+    constructor(databaseName, databasePassword) {
         this.databaseName = databaseName
         this.databasePassword = databasePassword
         this.#createDatabase()
