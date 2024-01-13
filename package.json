@@ -1,0 +1,11 @@
+{
+  "name": "octavia-db",
+  "version": "1.0.0",
+  "description": "Json database with encryption.",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon index.js"
+  },
+  "author": "madhanmaaz",
+  "license": "ISC"
+}
