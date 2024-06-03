@@ -3,7 +3,7 @@
 OctaviaDB is a lightweight Node.js module for creating encrypted collections of data on the filesystem. It provides basic CRUD (Create, Read, Update, Delete) operations for collections and supports encryption for data security.
 
 ## Authors
-<a href="https://www.buymeacoffee.com/madhanmaazz" target="_blank"><img  align="right" src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+<a href="https://www.buymeacoffee.com/madhanmaaz" target="_blank"><img  align="right" src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
 
 - [@Madhanmaaz](https://www.github.com/madhanmaaz)
