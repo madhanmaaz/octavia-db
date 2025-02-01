@@ -1,28 +1,32 @@
 {
   "name": "octavia-db",
-  "version": "2.0.0",
-  "description": "OctaviaDB is a lightweight Node.js module for creating encrypted collections of data on the filesystem. It provides basic CRUD (Create, Read, Update, Delete) operations for collections and supports encryption for data security.",
-  "main": "index.js",
+  "version": "2.0.3",
+  "description": "OctaviaDB - A lightweight, AES-encrypted NoSQL database for fast and secure local storage in Node.js.",
+  "main": "src/index.js",
   "scripts": {
-    "test": "node octaviaDB.test.js",
-    "start": "node index.js"
+    "test": "node octaviaDB.test.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/madhanmaaz/octavia-db.git"
   },
+  "author": {
+    "name": "madhanmaaz",
+    "url": "https://madhanmaaz.netlify.app"
+  },
   "keywords": [
     "database",
+    "nodejs-database",
     "encryption",
     "nodejs",
     "octaviadb",
     "octavia-db",
     "express-database",
     "octavia-database",
-    "express-db"
+    "express-db",
+    "local-database"
   ],
-  "author": "madhanmaaz",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/madhanmaaz/octavia-db/issues"
   },

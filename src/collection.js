@@ -1,229 +1,107 @@
-/**
- * @file collection
- * @description collection class.
- * @author madhanmaaz
- * @license MIT
- * @repository https://github.com/madhanmaaz/octavia-db
- */
+const Base = require("./base")
+const helpers = require("./helpers")
 
+class Collection extends Base {
+    constructor(collectionName, encrypt, db) {
+        super(collectionName, encrypt, db, true)
+    }
 
-const fs = require("fs")
-const path = require("path")
-const operations = require("./operations")
-const { Encryptor } = require("./encryptor")
+    _matchesQuery(item, query) {
+        return Object.keys(query).every(key => item[key] === query[key])
+    }
 
-class Collection {
-    /**
-     * @constructor
-     * @param {string} collectionName - The name of the collection.
-     * @param {boolean} encrypt - Whether to encrypt the collection data.
-     * @param {object} DB - The OctaviaDB instance.
-     */
-    constructor(collectionName, encrypt, DB) {
-        this.collectionName = collectionName
-        this.encrypt = encrypt
-        this.database = DB.database
-        this.password = DB.password
-        this.collectionPath = path.join(this.database, this.collectionName)
+    insert(data, immediateCommit = false) {
+        helpers.isNotObjectThrowError(data)
 
-        if (!fs.existsSync(this.collectionPath)) {
-            Encryptor.encryption(this.collectionPath, [], this.password, this.encrypt)
+        this.cache.push(data)
+        this.isModified = true
+
+        if (immediateCommit) {
+            this.commit()
         }
     }
 
-    /**
-     * Inserts a single data object into the collection.
-     * @param {object} data - The data to insert.
-     * @param {object} dataScheme - The schema of the data.
-     * @returns {object} - Response object indicating success or failure.
-     */
-    insert(data, dataScheme) {
-        operations.isNotObjectThrowError(data)
-        operations.validateScheme(data, dataScheme)
+    insertMany(dataArray, immediateCommit = false) {
+        helpers.isNotArrayThrowError(dataArray)
 
-        const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-        decryptedData.push(data)
-        Encryptor.encryption(this.collectionPath, decryptedData, this.password, this.encrypt)
+        this.cache.push(...dataArray)
+        this.isModified = true
 
-        return operations.response(true, "Record inserted successfully.")
-    }
-
-    /**
-     * Inserts multiple data objects into the collection.
-     * @param {Array} data - Array of data objects to insert.
-     * @param {object} dataScheme - The schema of the data.
-     * @returns {object} - Response object indicating success or failure.
-     */
-    insertMany(data, dataScheme) {
-        operations.isNotArrayThrowError(data)
-        for (const obj of data) {
-            operations.validateScheme(obj, dataScheme)
+        if (immediateCommit) {
+            this.commit()
         }
-
-        const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-        Encryptor.encryption(this.collectionPath, decryptedData.concat(data), this.password, this.encrypt)
-        return operations.response(true, "Records inserted successfully.")
     }
 
-    /**
-     * Finds a single data object in the collection that matches the query.
-     * @param {object} query - The query to match against.
-     * @returns {object|undefined} - The matching data object, or undefined if no match is found.
-     */
     find(query) {
-        operations.isNotObjectThrowError(query)
-        const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-
-        return decryptedData.find(obj => {
-            return operations.matchQuery(obj, query)
-        })
+        helpers.isNotObjectThrowError(query)
+        return this.findMany(query)[0] || null
     }
 
-    /**
-     * Finds all data objects in the collection that match the query.
-     * @param {object} query - The query to match against.
-     * @returns {Array} - Array of matching data objects.
-     */
     findMany(query) {
-        operations.isNotObjectThrowError(query)
-        const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-
-        return decryptedData.filter(obj => {
-            return operations.matchQuery(obj, query)
-        })
+        helpers.isNotObjectThrowError(query)
+        return this.cache.filter(item => this._matchesQuery(item, query))
     }
 
-    /**
-     * Updates a single data object in the collection that matches the query.
-     * @param {object} query - The query to match against.
-     * @param {object} newData - The new data to update.
-     * @returns {object} - Response object indicating success or failure.
-     */
-    update(query, newData, dataScheme) {
-        operations.isNotObjectThrowError(query)
-        operations.isNotObjectThrowError(newData)
-        operations.validateScheme(query, dataScheme)
+    update(query, newData, immediateCommit = false) {
+        helpers.isNotObjectThrowError(query)
+        helpers.isNotObjectThrowError(newData)
 
-        const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-        const index = decryptedData.findIndex(obj => {
-            return operations.matchQuery(obj, query)
-        })
+        const item = this.find(query)
+        if (item) {
+            Object.assign(item, newData)
+            this.isModified = true
 
-        if (index === -1) {
-            return operations.response(false, `No matching record found.`);
+            if (immediateCommit) {
+                this.commit()
+            }
         }
-
-        operations.deepUpdate(decryptedData[index], newData)
-        Encryptor.encryption(this.collectionPath, decryptedData, this.password, this.encrypt)
-        return operations.response(true, `Record updated successfully.`, { updated: decryptedData[index] })
     }
 
-    /**
-     * Updates multiple data objects in the collection that match the query.
-     * @param {object} query - The query to match against.
-     * @param {object} newData - The new data to update.
-     * @returns {object} - Response object indicating success or failure.
-     */
-    updateMany(query, newData, dataScheme) {
-        operations.isNotObjectThrowError(query)
-        operations.validateScheme(query, dataScheme)
+    updateMany(query, newData, immediateCommit = false) {
+        helpers.isNotObjectThrowError(query)
+        helpers.isNotObjectThrowError(newData)
 
-        const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-        let updatedCount = 0
-        decryptedData.forEach((obj, index) => {
-            if (operations.matchQuery(obj, query)) {
-                operations.deepUpdate(obj, newData)
-                updatedCount++
+        let updated = false
+
+        this.cache.forEach(item => {
+            if (this._matchesQuery(item, query)) {
+                Object.assign(item, newData)
+                updated = true
             }
         })
 
-        Encryptor.encryption(this.collectionPath, decryptedData, this.password, this.encrypt)
-        return operations.response(true, `Records updated successfully.`, { updatedCount })
-    }
-
-    /**
-     * Removes a single data object in the collection that matches the query.
-     * @param {object} query - The query to match against.
-     * @returns {object} - Response object indicating success or failure.
-     */
-    remove(query) {
-        operations.isNotObjectThrowError(query)
-
-        const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-        const index = decryptedData.findIndex(obj => operations.matchQuery(obj, query))
-
-        if (index === -1) {
-            // If no matching record is found
-            return operations.response(false, `No matching record found to remove.`)
-        }
-
-        const [removedRecord] = decryptedData.splice(index, 1)
-        Encryptor.encryption(this.collectionPath, decryptedData, this.password, this.encrypt)
-        return operations.response(true, `Record removed successfully.`, { removedRecord })
-    }
-
-    /**
-     * Removes all data objects in the collection that match the query.
-     * @param {object} query - The query to match against.
-     * @returns {object} - Response object indicating success or failure.
-     */
-    removeMany(query) {
-        operations.isNotObjectThrowError(query)
-
-        const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-        const originalLength = decryptedData.length
-        const filteredData = decryptedData.filter(obj => !operations.matchQuery(obj, query))
-        const removedCount = originalLength - filteredData.length
-
-        Encryptor.encryption(this.collectionPath, filteredData, this.password, this.encrypt)
-        return operations.response(true, `Records removed successfully.`, { removedCount })
-    }
-
-    /**
-     * Retrieves information about the collection.
-     * @returns {object} - An object containing information about the collection.
-     */
-    info() {
-        try {
-            const stats = fs.statSync(this.collectionPath)
-            const decryptedData = Encryptor.decryption(this.collectionPath, this.password)
-
-            return {
-                database: this.database,
-                collectionName: this.collectionName,
-                collectionPath: this.collectionPath,
-                size: stats.size,
-                created: stats.birthtime,
-                modified: stats.mtime,
-                records: decryptedData.length
+        if (updated) {
+            this.isModified = true
+            if (immediateCommit) {
+                this.commit()
             }
-        } catch (error) {
-            throw new operations.OctaviaError(
-                `Failed to get collection information: ${error.message}`,
-                operations.OctaviaError.ERR_COLLECTION_INFORMATION,
-                operations.response(false, `Failed to get '${this.database}.${this.collectionName}' information.`))
         }
     }
 
-    /**
-     * Deletes the collection.
-     * @returns {object} - Response object indicating success or failure.
-     */
-    delete() {
-        try {
-            fs.rmSync(this.collectionPath, { recursive: true })
-            return operations.response(
-                true,
-                `'${this.collectionName}' collection deleted successfully.`
-            )
-        } catch (error) {
-            throw new operations.OctaviaError(
-                `Deleting collection: ${error.message}`,
-                operations.OctaviaError.ERR_COLLECTION_DELETE,
-                operations.response(false, `Failed to delete the collection '${this.database}.${this.collectionName}'.`)
-            )
+    remove(query, immediateCommit = false) {
+        const index = this.cache.findIndex(item => this._matchesQuery(item, query))
+
+        if (index !== -1) {
+            this.cache.splice(index, 1)
+            this.isModified = true
+
+            if (immediateCommit) {
+                this.commit()
+            }
+        }
+    }
+
+    removeMany(query, immediateCommit = false) {
+        const initialLength = this.cache.length
+        this.cache = this.cache.filter(item => !this._matchesQuery(item, query))
+
+        if (this.cache.length !== initialLength) {
+            this.isModified = true
+            if (immediateCommit) {
+                this.commit()
+            }
         }
     }
 }
 
-module.exports = { Collection }
+module.exports = Collection

@@ -1,385 +1,187 @@
 # Octavia DB
-OctaviaDB is a lightweight Node.js module for creating encrypted collections of data on the filesystem and supports encryption for data security.
+- OctaviaDB - A lightweight, AES-encrypted NoSQL database for fast and secure local storage in Node.js.
+
+# Features
+- AES Encryption: Secure your data with robust AES encryption, ensuring privacy and safety for all stored information.
+- NoSQL Architecture: A flexible, schema-less NoSQL database that allows for easy storage of diverse data structures.
+- Auto-Commit: Automatically save changes at customizable intervals to prevent data loss and ensure consistent persistence.
 
 # Installation
-To install the OctaviaDB module, run the following command in your terminal:
+- To install the OctaviaDB module, run the following command in your terminal:
 ```bash
 npm install octavia-db
 ```
 
-# Features
-- **Encryption**: OctaviaDB provides built-in encryption for your database to ensure data security.
+# Example 1: Initialize Database
+- This example shows how to initialize your database by specifying the database name, password, and auto-commit interval.
 
-- **Database Information**: Retrieve information about the database and collections
+```js
+const OctaviaDB = require('octavia-db');
 
-- **Schema Validation**: Validate data against predefined schemas to ensure data integrity and consistency.
+// Initialize the OctaviaDB instance
+const db = new OctaviaDB({
+    database: './my-database',        // Path to your database directory
+    password: 'my-secret-password',    // Password for encryption
+    autoCommitInterval: 5000          // Auto commit changes every 5 seconds
+});
 
-# Methods
+// Get information about the database
+console.log(db.info());
+
+```
+
+# Example 2: Work with Collections
+- This example demonstrates how to create a collection, insert data, update data, and perform other operations like finding and removing data.
+
+```js
+const OctaviaDB = require('octavia-db');
+const db = new OctaviaDB({
+    database: './my-database',
+    password: 'my-secret-password',
+    autoCommitInterval: 5000
+});
+
+// Create a new collection
+const collection = db.collection('users');
+
+// Insert a single document
+collection.insert({ id: 1, name: 'John Doe', age: 30 });
+collection.insert({ id: 2, name: 'Jane Smith', age: 25 });
+
+// Insert multiple documents
+collection.insertMany([
+    { id: 3, name: 'Michael Johnson', age: 35 },
+    { id: 4, name: 'Sarah Lee', age: 40 }
+]);
+
+// Find a document by a query
+const user = collection.find({ id: 1 });
+console.log(user);  // Output: { id: 1, name: 'John Doe', age: 30 }
+
+// Update a document
+collection.update({ id: 1 }, { age: 31 });
+
+// Remove a document
+collection.remove({ id: 2 });
+
+// Find multiple documents
+const usersAbove30 = collection.findMany({ age: 30 });
+console.log(usersAbove30);  // Output: [ { id: 1, name: 'John Doe', age: 31 }, { id: 3, name: 'Michael Johnson', age: 35 } ]
+
+// Info about the collection
+console.log(collection.info());
+```
+
+# Example 3: Work with Data Objects
+- This example shows how to create and interact with a single data object that holds key-value pairs, similar to working with a JSON object.
+
+```js
+const OctaviaDB = require('octavia-db');
+const db = new OctaviaDB({
+    database: './my-database',
+    password: 'my-secret-password',
+    autoCommitInterval: 5000
+});
+
+// Create a new data object
+const dataObject = db.dataObject('settings');
+
+// Set key-value pairs in the data object
+dataObject.set('theme', 'dark');
+dataObject.set('notifications', true);
+dataObject.set('language', 'en');
+
+// Get values from the data object
+console.log(dataObject.get('theme'));  // Output: 'dark'
+console.log(dataObject.get('notifications'));  // Output: true
+console.log(dataObject.get('language'));  // Output: 'en'
+
+// Update a value in the data object
+dataObject.set('theme', 'light');
+
+// Remove value
+dataObject.remove('language');
+
+// Info about the data object
+console.log(dataObject.info());  // Outputs stats on the data object (size, creation time, etc.)
+```
+
+# Example 4: Deleting Data
+- This example demonstrates how to delete a collection or data object and even the entire database.
+
+```js
+const OctaviaDB = require('octavia-db');
+const db = new OctaviaDB({
+    database: './my-database',
+    password: 'my-secret-password',
+    autoCommitInterval: 5000
+});
+
+// Create a collection and insert data
+const collection = db.collection('users');
+collection.insert({ id: 1, name: 'John Doe', age: 30 });
+collection.insert({ id: 2, name: 'Jane Smith', age: 25 });
+
+// Delete a collection
+collection.delete();
+
+// Create a new data object
+const dataObject = db.dataObject('settings');
+dataObject.set('theme', 'dark');
+dataObject.set('notifications', true);
+
+// Delete a data object
+dataObject.delete();
+
+// Delete the entire database (be cautious with this!)
+db.delete();
+```
+
+# Example 5: Check if Collection or Document Exists
+- This example shows how to check whether a collection or document exists in the database before performing operations.
+
+```js
+const OctaviaDB = require('octavia-db');
+const db = new OctaviaDB({
+    database: './my-database',
+    password: 'my-secret-password',
+    autoCommitInterval: 5000
+});
+
+// Check if a collection exists
+const collectionExists = db.collectionExists('users');
+console.log(`Collection 'users' exists: ${collectionExists}`);  // Output: true/false
+
+// Check if a data object exists
+const dataObjectExists = db.documentExists('settings');
+console.log(`Data Object 'settings' exists: ${dataObjectExists}`);  // Output: true/false
+```
+
+# OctaviaDB Methods
 ```js
 // database methods
-db.info()
-db.delete()
-db.collectionExists(collectionName)
+db.info() // Returns information about the database
+db.delete() // Deletes the entire database
+db.collection(collectionName, encrypt) //  Creates a new collection within the database.
+db.dataObject(dataObjectName, encrypt) // Creates a new data object within the database.
+db.collectionExists(collectionName) // Checks if a collection exists.
+db.documentExists(documentName) // Checks if a document exists.
 
-// collection methods. `dataScheme` are optional
-collection.info()
-collection.delete()
-collection.insert(dataObject, dataScheme)
-collection.insertMany(arrayOfDataObjects, dataScheme)
-collection.find(queryData)
-collection.findMany(queryData)
-collection.update(queryData, newData, dataScheme)
-collection.updateMany(queryData, newData, dataScheme)
-collection.remove(queryData)
-collection.removeMany(queryData)
-```
+// collection methods.
+collection.info() // information about collection
+collection.delete() // delete collection
+collection.insert(data, immediateCommit) // Inserts a new item into the collection.
+collection.insertMany(dataArray, immediateCommit) // Inserts multiple items into the collection.
+collection.find(query) // Finds a single item that matches the query.
+collection.findMany(query) // Finds multiple items that match the query.
+collection.update(query, newData, immediateCommit) // Updates an item in the collection.
+collection.updateMany(query, newData, immediateCommit) // Updates multiple items in the collection.
+collection.remove(query, immediateCommit) // Removes an item from the collection.
+collection.removeMany(query, immediateCommit) // Removes multiple items from the collection.
 
-# Getting Started
-#### Create a new database with a name and password
-```js
-const { OctaviaDB } = require("octavia-db")
-
-const db = new OctaviaDB({
-	database: 'myDatabase',
-	password: 'mySecretPassword',
-});
-```
-#### Create a collection. `db.Collection()`
-```js
-const userCollection = db.Collection(
-	'users', // collection name
-	true  // encryption, default true
-);
-```
-
-#### Insert data into the collection. `collection.insert()`
-```js
-const user = {
-    username: 'john_doe',
-    email: 'john.doe@example.com',
-    age: 30
-};
-
-try {
-	userCollection.insert(user)
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Insert data into the collection. `collection.insert()` with data scheme
-```js
-const user = {
-    username: 'john_doe',
-    email: 'john.doe@example.com',
-    age: 30,
-	active: true,
-	languages: [
-		'c++',
-		'c',
-		'golang',
-		'js'
-	]
-};
-
-try {
-	userCollection.insert(user, {
-		username: String,
-    	email: String,
-    	age: Number,
-		active: Boolean,
-		languages: Array
-	})
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Insert multiple data objects into the collection.`collection.insertMany()`
-```js
-const multipleUserData = [
-	{
-		username: "patrick_williams",
-		email: "patrick.williams@example.com",
-		age: 25
-  	},
-	{
-		username: "jane_smith",
-		email: "jane.smith@example.com",
-		age: 25
-	},
-	{
-		username: "alex_johnson",
-		email: "alex.johnson@example.com",
-		age: 35
-	},
-	{
-		username: 'john_doe',
-		email: 'john.doe@example.com',
-		age: 25
-	}
-];
-
-try {
-	userCollection.insertMany(multipleUserData)
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-
-#### Find a user in the collection. `collection.find()`
-```js
-try {
-	const foundUser = userCollection.find({ username: 'john_doe' })
-	console.log(result)
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Find many users in the collection. `collection.findMany()`
-```js
-try {
-	const users = userCollection.findMany({ age: 25 })
-	console.log(users);
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Update user information. `collection.update()`
-```js
-try {
-	const updatedUserData = {
-    	age: 31,
-    	city: 'New York'
-	};
-
-	const updated = userCollection.update({ username: 'alex_johnson' }, updatedUserData)
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Update many user information. `collection.updateMany()`
-```js
-try {
-	const updatedUserData = {
-    	status: "go to work"
-	};
-
-	const updated = userCollection.updateMany({ age: 25 }, updatedUserData)
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Remove a user from the collection. `collection.remove()`
-```js
-try {
-	const removed = userCollection.remove({ username: 'alex_johnson' })
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Remove many user from the collection. `collection.removeMany()`
-```js
-try {
-	const removed = userCollection.removeMany({ age: 25 })
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Get information about the collection. `collection.info()`
-```js
-try {
-	const collectionInfo = userCollection.info()
-	console.log(collectionInfo)
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Get information about the entire database. `databaseName.info()`
-```js
-try {
-	const databaseInfo = db.info()
-	console.log(databaseInfo)
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Delete the collection. `collection.delete()`
-```js
-try {
-	const response = userCollection.delete()
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-#### Delete the entire database. `db.delete()`
-```js
-try {
-	const response = db.delete()
-} catch(error) {
-	console.log("Code:", error.code)
-	console.log("Message:", error.msg)
-}
-```
-
-# Example 
-```js
-const { OctaviaDB } = require("octavia-db")
-
-try {
-    const DB = new OctaviaDB({
-        database: "database",
-        password: "mypassword"
-    })
-
-    const users = DB.Collection("users", false)
-
-    const insert = users.insert({
-        id: 1,
-        username: "madhan",
-        age: 20,
-        records: { r1: 1, r2: 2 },
-        languages: ["js", "c", "c++", "go", "php"],
-        deep: {
-            tags: {
-                a: true,
-                b: false
-            },
-            btns: {
-                text: "click",
-                className: "button",
-                index: 0
-            }
-        }
-    }, {
-        id: Number,
-        username: String,
-        age: Number,
-        records: Object,
-        languages: Array,
-        deep: {
-            tags: {
-                a: Boolean,
-                b: Boolean
-            },
-            btns: {
-                text: String,
-                className: String,
-                index: Number
-            }
-        }
-    })
-
-    console.log("[+] insert:", insert)
-
-    const insertMany = users.insertMany([
-        {
-            id: 2,
-            username: "madhan",
-            age: 20,
-            records: { r1: 1, r2: 2 },
-            languages: ["js", "c", "c++", "go", "php"],
-            deep: {
-                tags: {
-                    a: true,
-                    b: false
-                },
-                btns: {
-                    text: "click",
-                    className: "button",
-                    index: 0
-                }
-            }
-        },
-        {
-            id: 3,
-            username: "madhan",
-            age: 25,
-            records: { r1: 1, r2: 2 },
-            languages: ["js", "c", "c++", "go", "php"],
-            deep: {
-                tags: {
-                    a: true,
-                    b: false
-                },
-                btns: {
-                    text: "click",
-                    className: "button",
-                    index: 0
-                }
-            }
-        }
-    ], {
-        id: Number,
-        username: String,
-        age: Number,
-        records: Object,
-        languages: Array,
-        deep: {
-            tags: {
-                a: Boolean,
-                b: Boolean
-            },
-            btns: {
-                text: String,
-                className: String,
-                index: Number
-            }
-        }
-    })
-
-    console.log("[+] insertMany:", insertMany)
-
-    const find = users.find({ age: 25 })
-    console.log("[+] find:", find)
-
-    const findMany = users.findMany({ age: 20 })
-    console.log("[+] findMany:", findMany)
-
-    const update = users.update({ age: 25 }, { status: "active" }, { status: String })
-    console.log("[+] update:", update)
-
-    const updateMany = users.updateMany({ age: 20 }, { status: "inActive" }, { status: String })
-    console.log("[+] updateMany:", updateMany)
-
-    const remove = users.remove({ age: 25 })
-    console.log("[+] remove:", remove)
-
-    const removeMany = users.removeMany({ age: 20 })
-    console.log("[+] removeMany:", removeMany)
-
-    console.log("[+] database information:", DB.info())
-    console.log("[+] collection information:", users.info())
-
-    const collectionDelete = users.delete()
-    console.log("[+] collectionDelete:", collectionDelete)
-
-    const databaseDelete = DB.delete()
-    console.log("[+] databaseDelete:", databaseDelete)
-} catch (error) {
-    console.log("Message:", error.msg)
-    console.log("Code:", error.code)
-}
+// DataObject Methods
+dataObj.set(key, value, immediateCommit) // Sets a key-value pair in the data object.
+dataObj.get(key) // Retrieves a value from the data object.
+dataObj.remove(key) // remove a value from the data object.
+dataObj.info() // Returns information about the data object.
 ```
